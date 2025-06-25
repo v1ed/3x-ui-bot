@@ -1,39 +1,32 @@
-import datetime
-import json
-
-import requests
-import uuid
-
-
-class X3:
-    login: str
-    password: str
-    host: str
-    headers = {}
-    ses = requests.Session()
-
-    def get_data(self):
-        return {"username": self.login, "password": self.password}
-
-    def test_connect(self):
-        response = self.ses.post(f"{self.host}/login", data=self.get_data())
-        return response
-
-    def send_request(self, method: str, path: str, data: dict = None):
-        if method == "POST":
-            return self.ses.post(f"{self.host}{path}", data=data)
-        elif method == "GET":
-            return self.ses.get(f"{self.host}{path}", data=data)
-        elif method == "DELETE":
-            return self.ses.delete(f"{self.host}{path}", data=data)
-        elif method == "PUT":
-            return self.ses.put(f"{self.host}{path}", data=data)
-        elif method == "PATCH":
-            return self.ses.patch(f"{self.host}{path}", data=data)
+import asyncio
+from database.crud import ServerCRUD    
+from config import settings
+from bot import bot, dp
+from bot.handlers import router as message_router
+from bot.callback_handlers.configs import router as config_router
+from bot.callback_handlers.servers import router as server_router
+from bot.callback_handlers.users import router as user_router
+from xuiapi import XUIAPI
 
 
+async def main():
+    server_list = await ServerCRUD.find_all()
+    servers = [XUIAPI(
+            host=server.server_host,
+            port=server.server_port,
+            webpath=server.server_webpath
+        ) for server in server_list]
+    tasks = [inst.login(server.server_login, server.server_password) for inst, server in list(zip(servers, server_list))]
+    results = await asyncio.gather(*tasks)
+    api_list = {server.id: api for server, api in list(zip(server_list, servers)) if api is not None}
+    dp['api_list'] = api_list
 
-if __name__ == "__main__":
-    x3 = X3()
-    
-    print(x3.test_connect())
+    dp.include_router(message_router)
+    dp.include_router(config_router)
+    dp.include_router(server_router)
+    dp.include_router(user_router)
+    await dp.start_polling(bot)
+
+
+asyncio.run(main())
+

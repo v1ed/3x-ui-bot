@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+aiohttp = {extras = ["speedups"], version = "*"}
+sqlalchemy = "*"
+pydantic = "*"
+pydantic-settings = "*"
+alembic = "*"
+asyncpg = "*"
+aiogram = "3.20"
+redis = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
