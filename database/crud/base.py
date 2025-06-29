@@ -1,4 +1,4 @@
-from sqlalchemy import select, update, delete, desc, asc
+from sqlalchemy import select, update, delete, desc, asc, func
 from database.database import async_session_maker
 
 
@@ -59,6 +59,13 @@ class BaseCRUD:
                 query = query.limit(limit)
             result = await session.execute(query)
             return result.scalars().all()
+
+    @classmethod
+    async def count(cls, **filter_by):
+        async with async_session_maker() as session:
+            query = select(func.count()).select_from(cls.model).filter_by(**filter_by)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
 
     @classmethod
     async def add(cls, **values):

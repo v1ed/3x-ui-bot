@@ -11,12 +11,12 @@ def user_list_kb(users, page, max_page):
     if page > 0:
         builder.button(text="<<", callback_data=UserActions(action=Actions.view, page=page - 1))
     else:
-        builder.button(text="❌", callback_data=UserActions(action=Actions.view, page=page))
+        builder.button(text="❌", callback_data=UserActions(action=Actions.disabled))
     
     if max_page > page:
         builder.button(text=">>", callback_data=UserActions(action=Actions.view, page=page + 1))
     else:
-        builder.button(text="❌", callback_data=UserActions(action=Actions.view, page=page))
+        builder.button(text="❌", callback_data=UserActions(action=Actions.disabled))
     # builder.button(text="Назад", callback_data=UserActions(action=Actions.view))
     builder.adjust(2)
     return builder.as_markup()

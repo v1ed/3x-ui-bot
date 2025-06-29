@@ -18,13 +18,13 @@ router = Router()
 
 
 @router.callback_query(UserFilter(), ConfigActions.filter(F.action == 'close'))
-async def callback_query_handler(callback_query: CallbackQuery, callback_data: ConfigActions):
+async def config_close(callback_query: CallbackQuery, callback_data: ConfigActions):
     await callback_query.message.delete()
     return callback_query.answer()
 
 
 @router.callback_query(UserFilter(), ConfigActions.filter(F.action == 'edit'))
-async def callback_query_handler(callback_query: CallbackQuery, callback_data: ConfigActions):
+async def config_edit(callback_query: CallbackQuery, callback_data: ConfigActions):
     action = callback_data.action
     user_id = callback_data.user_id
     config_id = callback_data.config_id
@@ -42,7 +42,7 @@ async def callback_query_handler(callback_query: CallbackQuery, callback_data: C
 
 
 @router.callback_query(UserFilter(), ConfigActions.filter(F.action == 'remove'))
-async def callback_query_handler(callback_query: CallbackQuery, callback_data: ConfigActions):
+async def config_remove(callback_query: CallbackQuery, callback_data: ConfigActions):
     user_id = callback_data.user_id
     config_id = callback_data.config_id
     config = await UserConfigCRUD.find_one_or_none(id=config_id)
@@ -65,7 +65,7 @@ async def callback_query_handler(callback_query: CallbackQuery, callback_data: C
 
 
 @router.callback_query(UserFilter(), ConfigActions.filter(F.action == 'add'))
-async def callback_query_handler(callback_query: CallbackQuery, callback_data: ConfigActions):
+async def config_add(callback_query: CallbackQuery, callback_data: ConfigActions):
     user_id = callback_data.user_id
     server_id = callback_data.server_id
     count = await UserConfigCRUD.get_user_config_count(user_id=user_id)
@@ -114,7 +114,7 @@ async def callback_query_handler(callback_query: CallbackQuery, callback_data: C
     return callback_query.answer()
 
 @router.callback_query(UserFilter(), ConfigActions.filter(F.action == 'view'))
-async def callback_query_handler(callback_query: CallbackQuery, callback_data: ConfigActions):
+async def config_view(callback_query: CallbackQuery, callback_data: ConfigActions):
     user_id = str(callback_data.user_id)
     config_id = callback_data.config_id
     
@@ -132,3 +132,7 @@ async def callback_query_handler(callback_query: CallbackQuery, callback_data: C
         text = Bold("Your configs")
         await callback_query.message.answer(text.as_markdown(), parse_mode='MarkdownV2', reply_markup=kb)
     return callback_query.answer()
+
+@router.callback_query(UserFilter(), ConfigActions.filter(F.action == 'disabled'))
+async def config_disabled(callback_query: CallbackQuery):
+    return callback_query.answer("Button disabled")

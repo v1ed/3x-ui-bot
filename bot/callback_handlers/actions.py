@@ -8,6 +8,7 @@ class Actions(str, Enum):
     edit = 'edit'
     view = 'view'
     close = 'close'
+    disabled = 'disabled'
     # my_configs = 'my_configs'
     # add_config = 'add_config'
     # remove_config = 'remove_config'
@@ -18,17 +19,27 @@ class Actions(str, Enum):
     # add_server = 'add_server'
     # remove_server = 'remove_server'
 
+
 class ConfigActions(CallbackData, prefix='config'):
     action: Actions
     user_id: str | None = None
     server_id: int | None = None
     config_id: str | None = None
 
+
 class UserActions(CallbackData, prefix='user'):
     action: Actions
     user_id: str | None = None
     page: int = 0
 
+
 class ServerActions(CallbackData, prefix='server'):
     action: Actions
     server_id: int | None = None
+    page: int = 0
+
+
+class KeyActions(CallbackData, prefix='key'):
+    action: Actions
+    key: str | None = None
+    page: int = 0
