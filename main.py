@@ -20,6 +20,7 @@ async def main():
         ) for server in server_list]
     tasks = [inst.login(server.server_login, server.server_password) for inst, server in list(zip(servers, server_list))]
     results = await asyncio.gather(*tasks)
+    print([result for result in results])
     api_list = {server.id: api for server, api in list(zip(server_list, servers)) if api is not None}
     dp['api_list'] = api_list
     dp.include_router(message_router)

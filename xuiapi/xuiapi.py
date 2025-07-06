@@ -2,20 +2,33 @@ import aiohttp
 import json
 import asyncio
 import uuid
+from urllib.parse import urljoin
+import traceback
 
-import aiohttp.http_exceptions
-import aiohttp.web_exceptions
+import ssl
+from aiohttp import ClientConnectorCertificateError, ClientConnectorError, ClientSSLError
 
 
 class XUIAPI:
     def __init__(self, host, port, webpath):
         self.username = ""
         self.password = ""
+        self.ssl_ctx = True
         self.host = host
+        self.port = port
         self.url = f"https://{host}:{port}{webpath}/"
-        # self.ses = None
-        self.ses = aiohttp.ClientSession(base_url=self.url)
-    
+        self.ssl_ctx = True
+        self.headers = {
+            'Accept': 'application/json',
+            'Connection': 'keep-alive',
+        }
+        self.ses = aiohttp.ClientSession(
+            base_url=self.url, 
+            headers=self.headers,
+            cookie_jar=aiohttp.CookieJar(unsafe=True)
+        )
+
+
     async def close_session(self):
         if self.ses and not self.ses.closed:
             await self.ses.close()
@@ -27,7 +40,7 @@ class XUIAPI:
             "username": self.username,
             "password": self.password,
         }
-        response = await self._send_request("POST", "login", data=data)
+        response = await self._send_request("POST", "login/", data=data)
         return response
     
     async def inbounds(self):
@@ -103,8 +116,9 @@ class XUIAPI:
             try:
                 async with self.ses.request(
                         method=method, 
-                        url=f"{path}", 
-                        json=data) as resp:
+                        url=path, 
+                        json=data,
+                        ssl=self.ssl_ctx) as resp:
                     if resp.status == 200:
                         print(f"Susscessful {method} request to {self.url}{path}")
                         if resp.content_type == 'application/json':
@@ -116,7 +130,13 @@ class XUIAPI:
                     else:
                         print(f"[ERROR] An error occured while making {method} request to {self.url}{path}\nResponse status: {resp.status}\tDetail: {await resp.text()}")
                         return None
+            except ClientSSLError:
+                print(f"[WARN] SSL certificate error")
+                pem_cert = ssl.get_server_certificate((self.host, self.port))
+                self.ssl_ctx = ssl.create_default_context(cadata=pem_cert)
+                self.ssl_ctx.check_hostname = False
             except Exception as e:
+                traceback.print_exc()
                 print(f"[ERROR] An error occured while making {method} request to {self.url}{path}\nDetail: {e}")
             await asyncio.sleep(1)
         print(f"Failed to to make {method} request to {self.url}{path} after {max_attempts} attempts.")

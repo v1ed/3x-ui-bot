@@ -1,6 +1,6 @@
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Command, CommandStart
-from aiogram.utils.formatting import Bold, as_marked_section
+from aiogram.utils.formatting import Bold, as_marked_section, Text
 from aiogram import Router, F
 from urllib.parse import urlparse
 
@@ -80,11 +80,13 @@ async def add_server(message: Message):
     login = params[1]
     password = params[2]
     default_inbound = int(params[3])
-    await bot.send_message(message.chat.id, f"Trying to connect to {hostname}:{port}", parse_mode='MarkdownV2', reply_markup=kb)
+    text = Text(f"Trying to connect to {hostname}:{port}")
+    await bot.send_message(message.chat.id, text.as_markdown(), parse_mode='MarkdownV2')
     api = XUIAPI(host=hostname, port=int(port), webpath=webpath)
-    res = await api.login(username=login, password=server.password)
+    res = await api.login(username=login, password=password)
     if res:
-        await bot.send_message(message.chat.id, f"Successfully connected to {hostname}:{port}", parse_mode='MarkdownV2', reply_markup=kb)
+        text = Text(f"Successfully connected to {hostname}:{port}")
+        await bot.send_message(message.chat.id, text.as_markdown(), parse_mode='MarkdownV2')
         server = await ServerCRUD.add(
             server_host=hostname, 
             server_port=int(port), 
@@ -95,11 +97,12 @@ async def add_server(message: Message):
         )
         dp['api_list'][server.id] = api
         server_list = await ServerCRUD.find_all()
-        kb = server_list_kb(server_list=server_list)
-        text = Bold("Servers")
-        await bot.send_message(message.chat.id, text.as_markdown(), parse_mode='MarkdownV2', reply_markup=kb)
+        # kb = server_list_kb(server_list=server_list)
+        # text = Bold("Servers")
+        # await bot.send_message(message.chat.id, text.as_markdown(), parse_mode='MarkdownV2', reply_markup=kb)
     else:
-        await bot.send_message(message.chat.id, f"Failed to connect to server {server.server_host}!") 
+        text = Text(f"Failed to connect to server {host})!")
+        await bot.send_message(message.chat.id, text.as_markdown(), parse_mode="MarkdownV2") 
     return
 
 

@@ -37,6 +37,7 @@ class UserConfig(Base):
 class Server(Base):
     __tablename__ = 'servers'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    is_secure: bool = False
     server_host: Mapped[str] = mapped_column(String(255))
     server_port: Mapped[int] = mapped_column(Integer)
     server_webpath: Mapped[str] = mapped_column(String(255))

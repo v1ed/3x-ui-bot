@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.utils.formatting import Bold, as_marked_section, Text, Code
+from aiogram.utils.formatting import Bold, as_marked_section, Text, Code, Italic
 from aiogram.types import CallbackQuery
 from urllib import parse
 
@@ -19,9 +19,10 @@ async def server_remove(callback_query: CallbackQuery, callback_data: ServerActi
     await dp['api_list'][server_id].close_session()
     del dp['api_list'][server_id]
     await ServerCRUD.remove(id=server_id)
-    text = Text(f"Server removed {Bold('successfully')}!")
+    text = Text(f"Server removed", Bold('successfully'))
     await callback_query.message.answer(text.as_markdown(), parse_mode='MarkdownV2')
     return callback_query.answer()
+
 
 @router.callback_query(AdminFilter(), ServerActions.filter(F.action == 'add'))
 async def server_add(callback_query: CallbackQuery, callback_data: ServerActions):
@@ -29,12 +30,50 @@ async def server_add(callback_query: CallbackQuery, callback_data: ServerActions
     await callback_query.message.answer(text.as_markdown(), parse_mode='MarkdownV2')
     return callback_query.answer()
 
+
 @router.callback_query(AdminFilter(), ServerActions.filter(F.action == 'view'))
 async def server_view(callback_query: CallbackQuery, callback_data: ServerActions):
     server_id = callback_data.server_id
     if server_id:
-        text = "Not implemented yet"
-        await callback_query.message.answer(text, parse_mode='MarkdownV2')
+        api = dp['api_list'][int(server_id)]
+        server = await ServerCRUD.find_one_or_none(id=int(server_id))
+        resp = await api.inbound(server.default_inbound)
+
+        traffic_sizes = {
+            0: 'b',
+            1: 'Kb',
+            2: 'Mb',
+            3: 'Gb',
+            4: 'Tb',
+            5: 'Pb'
+        }
+        up_mp = 0
+        down_mp = 0
+        try:
+            traffic_up = resp['obj']['up']
+            while traffic_up > 1024:
+                traffic_up /= 1024
+                up_mp += 1
+            traffic_up = round(traffic_up, 2)
+            traffic_down = resp['obj']['down']
+            while traffic_down > 1024:
+                traffic_down /= 1024
+                down_mp += 1
+            traffic_down = round(traffic_down, 2)
+        except:
+            traffic_up = 0
+            traffic_down = 0
+
+        config_count = await UserConfigCRUD.count(server_id=server.id)
+
+        text = Text(
+            Bold("Server\n"),
+            "URL: ", Code(f"{server.server_host}:{server.server_port}{server.server_webpath}\n"),
+            Bold("Traffic"), 
+            (f"↑ {traffic_up} {traffic_sizes[up_mp]}\t/\t↓ {traffic_down} {traffic_sizes[down_mp]}\n"),
+            Bold("Total configs: "), f"{config_count}"
+        )
+        await callback_query.message.answer(text.as_markdown(), parse_mode='MarkdownV2')
     else:
         page = int(callback_data.page)
         page_limit = 10

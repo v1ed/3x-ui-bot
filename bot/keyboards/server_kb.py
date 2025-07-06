@@ -6,8 +6,12 @@ from bot.dependencies import get_country_iso_by_domain, iso_to_flag
 def server_list_kb(server_list, page, max_page):
     builder = InlineKeyboardBuilder()
     for server in server_list:
-        location = get_country_iso_by_domain(server.server_host)
-        text = f"{iso_to_flag(location['countryCode'])} {server.server_host}"
+        try:
+            location = get_country_iso_by_domain(server.server_host)
+            flag = iso_to_flag(location['countryCode'])
+        except:
+            flag = ''
+        text = f"{flag} {server.server_host}"
         # text = Text(f"{iso_to_flag(location['countryCode'])}", server.server_host)
         builder.button(text=text, callback_data=ServerActions(action=Actions.view, server_id=server.id))
         builder.button(text='Удалить', callback_data=ServerActions(action=Actions.remove, server_id=server.id))    

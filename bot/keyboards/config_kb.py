@@ -18,10 +18,15 @@ def config_list_kb(user_id: str, config_list):
 def config_add_kb(user_id: str, servers_list):
     builder = InlineKeyboardBuilder()
     for server in servers_list:
-        location = get_country_iso_by_domain(server.server_host)
-        text = Text(f"{iso_to_flag(location['countryCode'])} {location['country']}")
+        try:
+            location = get_country_iso_by_domain(server.server_host)
+            flag = iso_to_flag(location['countryCode'])
+            location = location['country']
+        except:
+            flag = ''
+            location = 'Unknown'
+        text = Text(f"{flag} {location}")
         builder.button(text=text.as_markdown(), callback_data=ConfigActions(action=Actions.add, user_id=user_id, server_id=server.id))
-    # builder.button(text='Отмена', callback_data=ConfigActions(action=Actions.cancel))
     builder.button(text='Закрыть', callback_data=ConfigActions(action=Actions.close)) 
     builder.adjust(2)
     return builder.as_markup()
