@@ -27,6 +27,7 @@ class UserConfig(Base):
     __tablename__ = 'user_configs'
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True)
     config_name: Mapped[str] = mapped_column(String(64))
+    config_string: Mapped[str] = mapped_column(String(1024))
     server_id: Mapped[int] = mapped_column(Integer, ForeignKey('servers.id', ondelete='CASCADE'))
     telegram_id: Mapped[str] = mapped_column(String, ForeignKey('users.telegram_id', ondelete='CASCADE'))
     expire_date: Mapped[int] = mapped_column(Integer)

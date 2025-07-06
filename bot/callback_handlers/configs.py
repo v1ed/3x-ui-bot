@@ -93,15 +93,16 @@ async def config_add(callback_query: CallbackQuery, callback_data: ConfigActions
         cfg_id = uuid.uuid4()
         resp = await api.create_client(str(cfg_id), server.default_inbound, cfg_name)
         if resp:
-            cfg = await UserConfigCRUD.add(
+            link = await api.generate_link(server.default_inbound, cfg_name)
+            await UserConfigCRUD.add(
                 id = cfg_id,
                 config_name=cfg_name,
+                config_string=link,
                 server=server,
                 user=user,
                 expire_date=0,
                 limit=0
             )
-            link = await api.generate_link(server.default_inbound, cfg.config_name)
             text = Text(
                 "New config added!\n", 
                 Code(link)
@@ -120,10 +121,10 @@ async def config_view(callback_query: CallbackQuery, callback_data: ConfigAction
     
     if config_id:
         config = await UserConfigCRUD.find_one_or_none(id=config_id)
-        server = await ServerCRUD.find_one_or_none(id=config.server_id)
-        api = dp['api_list'][server.id]
-        link = await api.generate_link(server.default_inbound, config.config_name)
-        text = Text('Config:\n', Code(link))
+        # server = await ServerCRUD.find_one_or_none(id=config.server_id)
+        # api = dp['api_list'][server.id]
+        # link = await api.generate_link(server.default_inbound, config.config_name)
+        text = Text('Config:\n', Code(config.config_string))
         kb = config_view_kb(user_id=user_id, config=config)
         await callback_query.message.answer(text.as_markdown(), parse_mode='MarkdownV2', reply_markup=kb)
     else:
